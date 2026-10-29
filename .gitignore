@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+.idea/
+TestResults/
+*.user
+*.suo
+*.nupkg
+artifacts/
+
+# Local secrets
+settings.json
+src/OmenIsland.App/Services/Calendar/GoogleSignIn.Local.cs
