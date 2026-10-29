@@ -22,6 +22,12 @@ public sealed class AppSettings
     public string GoogleClientId { get; set; } = "";
 
     public string GoogleClientSecret { get; set; } = "";
+
+    public string HeadphoneDeviceId { get; set; } = "";
+
+    public string HeadphoneDeviceName { get; set; } = "";
+
+    public bool HeadphoneAutoConnect { get; set; } = true;
 }
 
 public sealed class SettingsStore

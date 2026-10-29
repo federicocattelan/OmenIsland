@@ -86,6 +86,20 @@ public partial class IslandWindow : Window
                 ApplyState(_stateController.State, true);
             }
         };
+        _viewModel.Headphones.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(HeadphonesViewModel.IsConnected) &&
+                _stateController.State is IslandState.Compact or IslandState.Expanded)
+            {
+                ApplyState(_stateController.State, true);
+            }
+            else if (args.PropertyName == nameof(HeadphonesViewModel.IsCustomEq) &&
+                     _stateController.State == IslandState.Expanded)
+            {
+                // The custom EQ sliders can make the headphones column taller.
+                ApplyState(IslandState.Expanded, false);
+            }
+        };
         _viewModel.Calendar.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName == nameof(CalendarViewModel.HasCompactEvent) &&
@@ -256,7 +270,8 @@ public partial class IslandWindow : Window
             workArea.Width,
             workArea.Height,
             compactWidth,
-            _viewModel.NowPlaying.IsActive);
+            _viewModel.NowPlaying.IsActive,
+            _viewModel.Headphones.IsConnected);
         if (state == IslandState.Expanded)
         {
             ExpandedView.Measure(new Size(dimensions.Width - 28, double.PositiveInfinity));
@@ -358,7 +373,8 @@ public partial class IslandWindow : Window
         var measured = Math.Ceiling(CompactView.DesiredSize.Width);
         var mode = (_viewModel.NowPlaying.IsActive ? 1 : 0)
             | (_viewModel.NowPlaying.ShowVisualizer ? 2 : 0)
-            | (_viewModel.Calendar.HasCompactEvent ? 4 : 0);
+            | (_viewModel.Calendar.HasCompactEvent ? 4 : 0)
+            | (_viewModel.Headphones.IsConnected ? 8 : 0);
         if (mode == _compactMode &&
             _stableCompactWidth > 0 &&
             Math.Abs(measured - _stableCompactWidth) < 8)
@@ -454,6 +470,7 @@ public partial class IslandWindow : Window
         yield return MetricRam;
         yield return FanRow;
         yield return CalendarColumn;
+        yield return HeadphonesColumn;
     }
 
     private static void PopInPlace(

@@ -47,6 +47,17 @@ There is no cover-art visualizer. `WaveformRibbon` and `ShowCoverVisualizer` wer
 
 Read-only Google Calendar in the expanded view. OAuth client data lives in `Services/Calendar/GoogleSignIn.Local.cs`, which is gitignored (template: `GoogleSignIn.Local.cs.example`). Without it the calendar stays disconnected. Do not print or commit the client secret. The signed-in account is the user's; do not invent a different one.
 
+## Headphones (CMF Headphone Pro)
+
+`CmfHeadphonesService` (App, `Services/Headphones`) speaks the Nothing control protocol over RFCOMM, service UUID `aeac4a03-dff5-498f-843a-34487cf133eb`. Frame `55 60 01 | cmd LE | len LE | seq | payload | CRC-16/MODBUS LE`; one request in flight at a time. Model is B175. Constants come from BudsLink / ear-web; do not copy their code (ear-web is AGPL).
+
+- Device is chosen in settings (CUFFIE) from paired Bluetooth devices: `HeadphoneDeviceId`, `HeadphoneDeviceName`, `HeadphoneAutoConnect`. The socket opens when Windows reports the device connected; retries 2/5/15 s.
+- Headphone image is the product photo split into `Assets/cmf-headphone-mask.png` (silhouette, filled with `IslandActiveBrush`) and `Assets/cmf-headphone-shade.png` (highlights/shadows on top), via `HeadphonesPhotoStyle`. It follows the accent like the rest of the island; do not swap it back to a vector icon or an untinted photo.
+- Compact: photo, battery %, thin bar, after the calendar. Expanded: fourth column (196 + 16 spacer): photo header with battery, noise control (Off/Trasparenza/ANC + level), then a `ShellRaisedBrush` card with EQ preset, spatial (Off/Concerto/Cinema), dual connection, LDAC. Its `MinHeight` is bound to `PerformanceCell` so it ends on the same line. Only visible while connected; adds 212 to the expanded width.
+- The settings device picker uses `SettingsComboBoxStyle` (glass box, gradient popup); keep it in line with `SettingsButtonStyle`.
+- EQ on B175 uses the listening-mode commands (`0xC050`/`0xF01D`), not `0xF010`. Bytes: 0 Dirac Opteo (read only, not in the cycle), 1 Rock, 2 Electronic, 3 Pop, 4 Vocals (Voce), 5 Classical, 6 Custom. There is no Flat/Balanced preset on this model.
+- Custom EQ: get `0xC044`, reply `0x4044`, set `0xF041`. Three biquads in the order peak 980 Hz Q0.7 (mid), high shelf 3500 Hz Q1.0 (treble), low shelf 140 Hz Q0.8 (bass), whole dB in [-6, 6], little-endian floats; total gain is minus the loudest positive band. When Custom is selected, three vertical sliders (Bassi/Medi/Alti) appear under the EQ row; changes are sent 250 ms after the last move.
+
 ## Hardware
 
 `HpHardwareController` talks to HP BIOS WMI. Command ids are in `HpWmiProtocol`. Victus 16-e legacy profile bytes:

@@ -151,6 +151,174 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <presentation:EqualsConverter x:Key="EqualsConverter" />
+        <!-- Vertical band slider for the headphone custom EQ; a faint mark sits at 0 dB. -->
+        <Style x:Key="IslandEqSliderStyle" TargetType="Slider">
+            <Setter Property="Orientation" Value="Vertical" />
+            <Setter Property="Minimum" Value="-6" />
+            <Setter Property="Maximum" Value="6" />
+            <Setter Property="SmallChange" Value="1" />
+            <Setter Property="LargeChange" Value="1" />
+            <Setter Property="TickFrequency" Value="1" />
+            <Setter Property="IsSnapToTickEnabled" Value="True" />
+            <Setter Property="IsMoveToPointEnabled" Value="True" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Background="Transparent">
+                            <Border Width="10" Height="1" Background="#40FFFFFF" VerticalAlignment="Center" />
+                            <Track x:Name="PART_Track" Orientation="Vertical">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Width="3" CornerRadius="1.5" Background="{DynamicResource IslandActiveBrush}" Opacity="0.55" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.IncreaseLarge}" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Width="3" CornerRadius="1.5" Background="#26FFFFFF" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="12" Height="12" Focusable="False">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Width="12" Height="12" Fill="{DynamicResource IslandActiveBrush}" />
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="IslandEqBandValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource IslandTextBrush}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="IslandEqBandLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource IslandMutedBrush}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+        <!-- CMF Headphone Pro photo, tinted with the island accent: the silhouette is filled
+             with IslandActiveBrush, the shade layer adds the photo's highlights and shadows. -->
+        <Style x:Key="HeadphonesPhotoStyle" TargetType="ContentControl">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContentControl">
+                        <Grid RenderOptions.BitmapScalingMode="HighQuality">
+                            <Rectangle Fill="{DynamicResource IslandActiveBrush}">
+                                <Rectangle.OpacityMask>
+                                    <ImageBrush ImageSource="pack://application:,,,/Assets/cmf-headphone-mask.png"
+                                                Stretch="Uniform" />
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                            <Image Source="pack://application:,,,/Assets/cmf-headphone-shade.png"
+                                   Stretch="Uniform" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Segmented choice: Tag carries "is selected" (bool via EqualsConverter). -->
+        <Style x:Key="HeadphoneSegmentStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource IslandMutedBrush}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Plate"
+                                CornerRadius="8"
+                                Background="#18FFFFFF"
+                                BorderThickness="1"
+                                BorderBrush="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Plate" Property="Background" Value="#28FFFFFF" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource IslandActiveBrush}" />
+                                <Setter TargetName="Plate" Property="BorderBrush" Value="{DynamicResource IslandActiveBrush}" />
+                            </DataTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Plate" Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Pill switch: Tag carries the on/off state. -->
+        <Style x:Key="IslandToggleStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Track"
+                                Width="30"
+                                Height="16"
+                                CornerRadius="8"
+                                Background="#33FFFFFF">
+                            <Ellipse x:Name="Knob"
+                                     Width="12"
+                                     Height="12"
+                                     Margin="2,0"
+                                     HorizontalAlignment="Left"
+                                     Fill="{StaticResource IslandTextBrush}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource IslandActiveBrush}" />
+                                <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
+                            </DataTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Track" Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="HeadphoneRowLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource IslandMutedBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
     </Window.Resources>
     <Grid x:Name="RootHost" Background="Transparent">
         <Border x:Name="IslandSurface"
@@ -516,6 +684,75 @@
                                        TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </StackPanel>
+
+                    <Border>
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource SectionDividerStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Headphones.IsConnected}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+                    <StackPanel Width="44"
+                                VerticalAlignment="Center"
+                                ToolTip="{Binding Headphones.DeviceName}">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Headphones.IsConnected}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <ContentControl Width="30"
+                                        Height="32"
+                                        HorizontalAlignment="Center"
+                                        Style="{StaticResource HeadphonesPhotoStyle}" />
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,3,0,0">
+                            <TextBlock Text="&#xE945;"
+                                       FontFamily="Segoe Fluent Icons"
+                                       FontSize="9"
+                                       Margin="0,0,2,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource IslandActiveBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Headphones.IsCharging}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Text="{Binding Headphones.BatteryText}"
+                                       Foreground="{StaticResource IslandTextBrush}"
+                                       FontSize="11"
+                                       FontWeight="SemiBold" />
+                        </StackPanel>
+                        <ProgressBar Width="26"
+                                     Margin="0,4,0,0"
+                                     Value="{Binding Headphones.BatteryProgress, Mode=OneWay}">
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar" BasedOn="{StaticResource ThinProgressStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Headphones.IsBatteryLow}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource IslandDangerBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel x:Name="ExpandedView"
@@ -813,7 +1050,7 @@
                             </Style>
                         </Border.Style>
                     </Border>
-                    <Grid Width="360" VerticalAlignment="Top" ClipToBounds="True">
+                    <Grid x:Name="PerformanceCell" Width="360" VerticalAlignment="Top" ClipToBounds="True">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="96" />
@@ -1283,6 +1520,276 @@
                                 </ItemsControl>
                             </StackPanel>
                     </Grid>
+
+                    <StackPanel x:Name="HeadphonesColumn"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Top">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Headphones.IsConnected}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <Border Width="16" />
+                        <!-- Never shorter than the performance cell, so both columns end on the same line. -->
+                        <Grid Width="196" MinHeight="{Binding ActualHeight, ElementName=PerformanceCell}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl Width="52"
+                                                Height="56"
+                                                Style="{StaticResource HeadphonesPhotoStyle}" />
+                                <StackPanel Grid.Column="1"
+                                            Margin="12,0,0,0"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Headphones.DeviceName}"
+                                               Foreground="{StaticResource IslandMutedBrush}"
+                                               FontSize="11"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                                        <TextBlock Text="{Binding Headphones.BatteryText}"
+                                                   Foreground="{StaticResource IslandTextBrush}"
+                                                   FontSize="20"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="&#xE945;"
+                                                   FontFamily="Segoe Fluent Icons"
+                                                   FontSize="12"
+                                                   Margin="4,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource IslandActiveBrush}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Headphones.IsCharging}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <ProgressBar Margin="0,5,0,0"
+                                                 Value="{Binding Headphones.BatteryProgress, Mode=OneWay}">
+                                        <ProgressBar.Style>
+                                            <Style TargetType="ProgressBar" BasedOn="{StaticResource ThinProgressStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Headphones.IsBatteryLow}" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource IslandDangerBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ProgressBar.Style>
+                                    </ProgressBar>
+                                </StackPanel>
+                            </Grid>
+
+                            <UniformGrid Grid.Row="1" Columns="3" Margin="-2,0">
+                                <Button Content="Off"
+                                        ToolTip="Controllo rumore disattivato"
+                                        Style="{StaticResource HeadphoneSegmentStyle}"
+                                        Command="{Binding Headphones.SetNoiseCommand}"
+                                        CommandParameter="Off"
+                                        Tag="{Binding Headphones.NoiseCategory, Converter={StaticResource EqualsConverter}, ConverterParameter=Off}" />
+                                <Button Content="Trasparenza"
+                                        Style="{StaticResource HeadphoneSegmentStyle}"
+                                        Command="{Binding Headphones.SetNoiseCommand}"
+                                        CommandParameter="Transparency"
+                                        Tag="{Binding Headphones.NoiseCategory, Converter={StaticResource EqualsConverter}, ConverterParameter=Transparency}" />
+                                <Button Content="ANC"
+                                        ToolTip="Cancellazione attiva del rumore"
+                                        Style="{StaticResource HeadphoneSegmentStyle}"
+                                        Command="{Binding Headphones.SelectAncCommand}"
+                                        Tag="{Binding Headphones.NoiseCategory, Converter={StaticResource EqualsConverter}, ConverterParameter=Anc}" />
+                            </UniformGrid>
+                            <UniformGrid Grid.Row="2" Columns="4" Margin="-2,6,-2,0">
+                                <UniformGrid.Style>
+                                    <Style TargetType="UniformGrid">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Headphones.IsAncActive}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </UniformGrid.Style>
+                                <UniformGrid.Resources>
+                                    <Style TargetType="Button" BasedOn="{StaticResource HeadphoneSegmentStyle}">
+                                        <Setter Property="Height" Value="22" />
+                                        <Setter Property="FontSize" Value="10" />
+                                        <Setter Property="Command" Value="{Binding Headphones.SetNoiseCommand}" />
+                                    </Style>
+                                </UniformGrid.Resources>
+                                <Button Content="Basso"
+                                        CommandParameter="AncLow"
+                                        Tag="{Binding Headphones.NoiseName, Converter={StaticResource EqualsConverter}, ConverterParameter=AncLow}" />
+                                <Button Content="Medio"
+                                        CommandParameter="AncMid"
+                                        Tag="{Binding Headphones.NoiseName, Converter={StaticResource EqualsConverter}, ConverterParameter=AncMid}" />
+                                <Button Content="Alto"
+                                        CommandParameter="AncHigh"
+                                        Tag="{Binding Headphones.NoiseName, Converter={StaticResource EqualsConverter}, ConverterParameter=AncHigh}" />
+                                <Button Content="Adattivo"
+                                        CommandParameter="AncAdaptive"
+                                        Tag="{Binding Headphones.NoiseName, Converter={StaticResource EqualsConverter}, ConverterParameter=AncAdaptive}" />
+                            </UniformGrid>
+
+                            <Border Grid.Row="3"
+                                    Margin="0,12,0,0"
+                                    Padding="12,4,8,4"
+                                    CornerRadius="10"
+                                    Background="{DynamicResource ShellRaisedBrush}">
+                                <!-- Setting rows share the height evenly; the custom EQ row only takes what it needs. -->
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                <Grid MinHeight="32">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Equalizzatore" Style="{StaticResource HeadphoneRowLabelStyle}" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource MediaButtonStyle}"
+                                                Command="{Binding Headphones.PreviousEqCommand}"
+                                                ToolTip="Preset precedente">
+                                            <TextBlock Text="&#xE76B;" FontFamily="Segoe Fluent Icons" FontSize="10"
+                                                       Foreground="{StaticResource IslandMutedBrush}" />
+                                        </Button>
+                                        <TextBlock Text="{Binding Headphones.EqLabel}"
+                                                   Width="68"
+                                                   TextAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource IslandTextBrush}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold" />
+                                        <Button Style="{StaticResource MediaButtonStyle}"
+                                                Command="{Binding Headphones.NextEqCommand}"
+                                                ToolTip="Preset successivo">
+                                            <TextBlock Text="&#xE76C;" FontFamily="Segoe Fluent Icons" FontSize="10"
+                                                       Foreground="{StaticResource IslandMutedBrush}" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                                <!-- Custom EQ: bass, mid, treble in whole dB, -6..+6. -->
+                                <UniformGrid Grid.Row="1" Columns="3" Margin="0,2,4,8">
+                                    <UniformGrid.Style>
+                                        <Style TargetType="UniformGrid">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Headphones.IsCustomEq}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </UniformGrid.Style>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Headphones.CustomBass, StringFormat={}{0:+0;-0;0}}"
+                                                   Style="{StaticResource IslandEqBandValueStyle}" />
+                                        <Slider Height="64"
+                                                Style="{StaticResource IslandEqSliderStyle}"
+                                                ToolTip="Bassi (dB)"
+                                                Value="{Binding Headphones.CustomBass, Mode=TwoWay}" />
+                                        <TextBlock Text="Bassi" Style="{StaticResource IslandEqBandLabelStyle}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Headphones.CustomMid, StringFormat={}{0:+0;-0;0}}"
+                                                   Style="{StaticResource IslandEqBandValueStyle}" />
+                                        <Slider Height="64"
+                                                Style="{StaticResource IslandEqSliderStyle}"
+                                                ToolTip="Medi (dB)"
+                                                Value="{Binding Headphones.CustomMid, Mode=TwoWay}" />
+                                        <TextBlock Text="Medi" Style="{StaticResource IslandEqBandLabelStyle}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Headphones.CustomTreble, StringFormat={}{0:+0;-0;0}}"
+                                                   Style="{StaticResource IslandEqBandValueStyle}" />
+                                        <Slider Height="64"
+                                                Style="{StaticResource IslandEqSliderStyle}"
+                                                ToolTip="Alti (dB)"
+                                                Value="{Binding Headphones.CustomTreble, Mode=TwoWay}" />
+                                        <TextBlock Text="Alti" Style="{StaticResource IslandEqBandLabelStyle}" />
+                                    </StackPanel>
+                                </UniformGrid>
+                                <Grid Grid.Row="2" MinHeight="32">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Audio spaziale" Style="{StaticResource HeadphoneRowLabelStyle}" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource MediaButtonStyle}"
+                                                Command="{Binding Headphones.PreviousSpatialCommand}"
+                                                ToolTip="Modalità precedente">
+                                            <TextBlock Text="&#xE76B;" FontFamily="Segoe Fluent Icons" FontSize="10"
+                                                       Foreground="{StaticResource IslandMutedBrush}" />
+                                        </Button>
+                                        <TextBlock Text="{Binding Headphones.SpatialLabel}"
+                                                   Width="62"
+                                                   TextAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource IslandTextBrush}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold" />
+                                        <Button Style="{StaticResource MediaButtonStyle}"
+                                                Command="{Binding Headphones.NextSpatialCommand}"
+                                                ToolTip="Modalità successiva">
+                                            <TextBlock Text="&#xE76C;" FontFamily="Segoe Fluent Icons" FontSize="10"
+                                                       Foreground="{StaticResource IslandMutedBrush}" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid Grid.Row="3" MinHeight="32">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Doppia connessione" Style="{StaticResource HeadphoneRowLabelStyle}" />
+                                    <Button Grid.Column="1"
+                                            Margin="0,0,4,0"
+                                            ToolTip="Collega le cuffie a due dispositivi insieme"
+                                            Style="{StaticResource IslandToggleStyle}"
+                                            Command="{Binding Headphones.ToggleDualCommand}"
+                                            Tag="{Binding Headphones.DualConnection}" />
+                                </Grid>
+                                <Grid Grid.Row="4" MinHeight="32">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Alta qualità" Style="{StaticResource HeadphoneRowLabelStyle}" />
+                                        <TextBlock Text="LDAC" FontSize="10" Foreground="{StaticResource IslandMutedBrush}" Opacity="0.7" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Margin="0,0,4,0"
+                                            ToolTip="Codec LDAC (spento: AAC)"
+                                            Style="{StaticResource IslandToggleStyle}"
+                                            Command="{Binding Headphones.ToggleLdacCommand}"
+                                            Tag="{Binding Headphones.IsLdac}" />
+                                </Grid>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>
