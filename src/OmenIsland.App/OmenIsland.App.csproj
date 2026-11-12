@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <Resource Include="Assets\omen-island.ico" />
+    <Resource Include="Assets\cmf-headphone-mask.png" />
+    <Resource Include="Assets\cmf-headphone-shade.png" />
   </ItemGroup>
 
   <ItemGroup>

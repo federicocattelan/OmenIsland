@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using OmenIsland.App.Services;
 using OmenIsland.App.Services.Calendar;
+using OmenIsland.App.Services.Headphones;
 using OmenIsland.App.Services.Media;
 using OmenIsland.Hardware;
 using OmenIsland.Hardware.Models;
@@ -44,13 +45,15 @@ public sealed class IslandViewModel : ObservableObject, IAsyncDisposable
         ThermalSafetyPolicy? safetyPolicy = null,
         SettingsStore? settings = null,
         NowPlayingViewModel? nowPlaying = null,
-        CalendarViewModel? calendar = null)
+        CalendarViewModel? calendar = null,
+        HeadphonesViewModel? headphones = null)
     {
         _hardware = hardware;
         _consent = consent;
         _settings = settings;
         NowPlaying = nowPlaying ?? new NowPlayingViewModel(new NowPlayingService());
         Calendar = calendar ?? new CalendarViewModel(new GoogleCalendarClient(), settings);
+        Headphones = headphones ?? new HeadphonesViewModel(new CmfHeadphonesService(), settings);
         _safetyPolicy = safetyPolicy ?? new ThermalSafetyPolicy();
 
         if (settings is not null)
@@ -226,6 +229,8 @@ public sealed class IslandViewModel : ObservableObject, IAsyncDisposable
 
     public CalendarViewModel Calendar { get; }
 
+    public HeadphonesViewModel Headphones { get; }
+
     public async Task InitializeAsync()
     {
         IsBusy = true;
@@ -247,6 +252,15 @@ public sealed class IslandViewModel : ObservableObject, IAsyncDisposable
             catch
             {
                 // Calendar credentials can be added later from settings.
+            }
+
+            try
+            {
+                await Headphones.StartAsync();
+            }
+            catch
+            {
+                // Bluetooth may be off; headphones can be picked later from settings.
             }
 
             var capabilities = await _hardware.InitializeAsync(_shutdown.Token);
@@ -332,6 +346,7 @@ public sealed class IslandViewModel : ObservableObject, IAsyncDisposable
         await ShutdownAsync();
         await NowPlaying.DisposeAsync();
         await Calendar.DisposeAsync();
+        await Headphones.DisposeAsync();
         await _hardware.DisposeAsync();
         _shutdown.Dispose();
         _refreshLock.Dispose();

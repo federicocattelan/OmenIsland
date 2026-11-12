@@ -71,14 +71,14 @@ public partial class IslandWindow : Window
 
             ApplyState(state, true);
         };
-        _viewModel.Calendar.LayoutChanged += (_, _) =>
+        EventHandler onCalendarLayout = (_, _) =>
         {
             if (_stateController.State == IslandState.Expanded)
             {
                 ApplyState(IslandState.Expanded, false);
             }
         };
-        _viewModel.NowPlaying.PropertyChanged += (_, args) =>
+        PropertyChangedEventHandler onNowPlayingChanged = (_, args) =>
         {
             if (args.PropertyName == nameof(NowPlayingViewModel.IsActive) &&
                 _stateController.State is IslandState.Compact or IslandState.Expanded)
@@ -86,13 +86,44 @@ public partial class IslandWindow : Window
                 ApplyState(_stateController.State, true);
             }
         };
-        _viewModel.Calendar.PropertyChanged += (_, args) =>
+        PropertyChangedEventHandler onHeadphonesChanged = (_, args) =>
+        {
+            if (args.PropertyName == nameof(HeadphonesViewModel.IsConnected) &&
+                _stateController.State is IslandState.Compact or IslandState.Expanded)
+            {
+                ApplyState(_stateController.State, true);
+            }
+            else if (args.PropertyName == nameof(HeadphonesViewModel.IsCustomEq) &&
+                     _stateController.State == IslandState.Expanded)
+            {
+                // The custom EQ sliders can make the headphones column taller.
+                ApplyState(IslandState.Expanded, false);
+            }
+        };
+        PropertyChangedEventHandler onCalendarChanged = (_, args) =>
         {
             if (args.PropertyName == nameof(CalendarViewModel.HasCompactEvent) &&
                 _stateController.State == IslandState.Compact)
             {
                 ApplyState(IslandState.Compact, true);
             }
+        };
+
+        // The view model outlives this window when the island is restarted from the tray,
+        // so detach everything the window hooked into it.
+        _viewModel.Calendar.LayoutChanged += onCalendarLayout;
+        _viewModel.NowPlaying.PropertyChanged += onNowPlayingChanged;
+        _viewModel.Headphones.PropertyChanged += onHeadphonesChanged;
+        _viewModel.Calendar.PropertyChanged += onCalendarChanged;
+        Closed += (_, _) =>
+        {
+            _viewModel.Calendar.LayoutChanged -= onCalendarLayout;
+            _viewModel.NowPlaying.PropertyChanged -= onNowPlayingChanged;
+            _viewModel.Headphones.PropertyChanged -= onHeadphonesChanged;
+            _viewModel.Calendar.PropertyChanged -= onCalendarChanged;
+            _enterTimer.Stop();
+            _leaveTimer.Stop();
+            StopBoundsAnimation();
         };
 
         Loaded += Window_Loaded;
@@ -115,6 +146,7 @@ public partial class IslandWindow : Window
 
         SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         Closed += (_, _) => SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+        StartPlacementWatchdog();
     }
 
     private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
@@ -139,6 +171,8 @@ public partial class IslandWindow : Window
         {
             ApplyShellColor();
         }
+
+        HandlePlacementMessage(msg, wParam);
 
         return IntPtr.Zero;
     }
@@ -248,6 +282,7 @@ public partial class IslandWindow : Window
 
     private void ApplyState(IslandState state, bool animate)
     {
+        MarkLayoutChanged();
         RevealContent(state, animate);
         var compactWidth = state == IslandState.Compact ? MeasureCompactWidth() : 0;
         var workArea = SystemParameters.WorkArea;
@@ -256,7 +291,8 @@ public partial class IslandWindow : Window
             workArea.Width,
             workArea.Height,
             compactWidth,
-            _viewModel.NowPlaying.IsActive);
+            _viewModel.NowPlaying.IsActive,
+            _viewModel.Headphones.IsConnected);
         if (state == IslandState.Expanded)
         {
             ExpandedView.Measure(new Size(dimensions.Width - 28, double.PositiveInfinity));
@@ -358,7 +394,8 @@ public partial class IslandWindow : Window
         var measured = Math.Ceiling(CompactView.DesiredSize.Width);
         var mode = (_viewModel.NowPlaying.IsActive ? 1 : 0)
             | (_viewModel.NowPlaying.ShowVisualizer ? 2 : 0)
-            | (_viewModel.Calendar.HasCompactEvent ? 4 : 0);
+            | (_viewModel.Calendar.HasCompactEvent ? 4 : 0)
+            | (_viewModel.Headphones.IsConnected ? 8 : 0);
         if (mode == _compactMode &&
             _stableCompactWidth > 0 &&
             Math.Abs(measured - _stableCompactWidth) < 8)
@@ -454,6 +491,7 @@ public partial class IslandWindow : Window
         yield return MetricRam;
         yield return FanRow;
         yield return CalendarColumn;
+        yield return HeadphonesColumn;
     }
 
     private static void PopInPlace(
@@ -540,7 +578,7 @@ public partial class IslandWindow : Window
             return 0;
         }
 
-        var pixelTop = System.Windows.Forms.Screen.FromHandle(handle).Bounds.Top;
+        var pixelTop = PrimaryScreenBounds().Top;
         var source = PresentationSource.FromVisual(this);
         var toDip = source?.CompositionTarget?.TransformFromDevice.M22 ?? 1;
         return pixelTop * toDip;
@@ -554,7 +592,7 @@ public partial class IslandWindow : Window
             return;
         }
 
-        var screenTop = System.Windows.Forms.Screen.FromHandle(handle).Bounds.Top;
+        var screenTop = PrimaryScreenBounds().Top;
         if (rect.Top == screenTop)
         {
             return;

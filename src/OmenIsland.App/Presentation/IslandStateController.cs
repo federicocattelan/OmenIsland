@@ -59,12 +59,16 @@ public static class IslandLayoutCalculator
 {
     private const double IdleWidthRatio = 0.113;
 
+    // 196 px column plus its 16 px spacer.
+    public const double HeadphonesColumnWidth = 212;
+
     public static IslandDimensions Calculate(
         IslandState state,
         double workAreaWidth,
         double workAreaHeight,
         double compactContentWidth = 0,
-        bool showPlayerColumn = false)
+        bool showPlayerColumn = false,
+        bool showHeadphonesColumn = false)
     {
         var maxWidth = Math.Max(160, workAreaWidth - 24);
         return state switch
@@ -79,7 +83,9 @@ public static class IslandLayoutCalculator
                     maxWidth),
                 88),
             IslandState.Expanded => new IslandDimensions(
-                Math.Min(showPlayerColumn ? 850 : 614, maxWidth),
+                Math.Min(
+                    (showPlayerColumn ? 850 : 614) + (showHeadphonesColumn ? HeadphonesColumnWidth : 0),
+                    maxWidth),
                 Math.Min(420, Math.Max(360, workAreaHeight - 24))),
             _ => throw new ArgumentOutOfRangeException(nameof(state))
         };

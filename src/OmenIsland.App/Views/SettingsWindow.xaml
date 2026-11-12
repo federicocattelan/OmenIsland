@@ -44,6 +44,155 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="SettingsComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="{StaticResource IslandTextBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Row"
+                                Background="Transparent"
+                                CornerRadius="7"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter VerticalAlignment="Center" />
+                                <TextBlock x:Name="Check"
+                                           Grid.Column="1"
+                                           Text="&#xE73E;"
+                                           FontFamily="Segoe Fluent Icons"
+                                           FontSize="12"
+                                           Margin="12,0,2,0"
+                                           VerticalAlignment="Center"
+                                           Visibility="Hidden" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="#26FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="#3DFFFFFF" />
+                                <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SettingsComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{StaticResource IslandTextBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="MaxDropDownHeight" Value="260" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource SettingsComboBoxItemStyle}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Focusable="False"
+                                          ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Box"
+                                                Background="#33FFFFFF"
+                                                BorderBrush="#66FFFFFF"
+                                                BorderThickness="1"
+                                                CornerRadius="9">
+                                            <TextBlock x:Name="Chevron"
+                                                       Text="&#xE70D;"
+                                                       FontFamily="Segoe Fluent Icons"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource IslandTextBrush}"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,13,0"
+                                                       RenderTransformOrigin="0.5,0.5">
+                                                <TextBlock.RenderTransform>
+                                                    <RotateTransform />
+                                                </TextBlock.RenderTransform>
+                                            </TextBlock>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Box" Property="Background" Value="#52FFFFFF" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Box" Property="Background" Value="#52FFFFFF" />
+                                                <Setter TargetName="Chevron" Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <RotateTransform Angle="180" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter IsHitTestVisible="False"
+                                              Margin="13,0,36,0"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
+                            <TextBlock x:Name="Placeholder"
+                                       Text="Seleziona le cuffie"
+                                       Margin="13,0,36,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource SettingsMutedBrush}"
+                                       IsHitTestVisible="False"
+                                       Visibility="Collapsed" />
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   VerticalOffset="6"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Fade"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}">
+                                <Border Margin="0,0,10,10"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        BorderBrush="#66FFFFFF"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="5">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#FF2445B4" Offset="0" />
+                                            <GradientStop Color="#FF4330C0" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="18" ShadowDepth="4" Direction="270" Opacity="0.35" />
+                                    </Border.Effect>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="SelectedItem" Value="{x:Null}">
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Window.Background>
         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -61,7 +210,7 @@
                 </LinearGradientBrush>
             </Rectangle.Fill>
         </Rectangle>
-        <ScrollViewer Margin="28,16,18,16"
+        <ScrollViewer Margin="28,16,7,16"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
             <ScrollViewer.Resources>
@@ -88,8 +237,10 @@
                     </Setter>
                 </Style>
             </ScrollViewer.Resources>
-        <Grid>
+        <!-- Cards end 28 px from the edge like on the left; the scrollbar sits just right of the middle of that gap. -->
+        <Grid Margin="0,0,13,0">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -240,7 +391,86 @@
             </StackPanel>
         </Border>
 
-        <Button Grid.Row="4"
+        <Border Grid.Row="4"
+                Margin="0,14,0,0"
+                Padding="16"
+                CornerRadius="14"
+                Background="{StaticResource SettingsCardBrush}"
+                BorderBrush="{StaticResource SettingsCardBorderBrush}"
+                BorderThickness="1">
+            <StackPanel>
+                <TextBlock Text="CUFFIE"
+                           Style="{StaticResource MetricLabelStyle}"
+                           Foreground="{StaticResource SettingsMutedBrush}" />
+                <TextBlock Text="Scegli le CMF Headphone Pro tra i dispositivi associati. Batteria e controlli compaiono nell'isola quando sono connesse."
+                           Foreground="{StaticResource SettingsMutedBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Margin="0,8,0,0" />
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox ItemsSource="{Binding PairedHeadphones}"
+                              SelectedItem="{Binding SelectedHeadphones}"
+                              DisplayMemberPath="Name"
+                              Style="{StaticResource SettingsComboBoxStyle}" />
+                    <Button Grid.Column="1"
+                            Content="Aggiorna"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding RefreshHeadphonesCommand}"
+                            Style="{StaticResource SettingsButtonStyle}" />
+                </Grid>
+                <CheckBox Margin="0,12,0,0"
+                          Foreground="{StaticResource IslandTextBrush}"
+                          FontSize="14"
+                          Content="Connetti automaticamente quando sono accese"
+                          IsChecked="{Binding HeadphoneAutoConnect}" />
+                <TextBlock Text="{Binding Island.Headphones.StatusText}"
+                           Foreground="{StaticResource IslandTextBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Margin="0,10,0,0" />
+                <TextBlock Text="{Binding HeadphoneNotice}"
+                           Foreground="{StaticResource SettingsMutedBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Margin="0,4,0,0" />
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Content="Connetti" Command="{Binding Island.Headphones.ConnectCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsButtonStyle}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Island.Headphones.IsConnected}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Island.Headphones.IsConfigured}" Value="False">
+                                        <Setter Property="IsEnabled" Value="False" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Content="Disconnetti" Command="{Binding Island.Headphones.DisconnectCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsButtonStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Island.Headphones.IsConnected}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Button Grid.Row="5"
                 Content="Esci da Omen Island"
                 Command="{Binding ExitCommand}"
                 Style="{StaticResource SettingsButtonStyle}"

@@ -41,6 +41,32 @@ public sealed class IslandPresentationTests
     }
 
     [Fact]
+    public void HeadphonesColumnWidensExpandedPanel()
+    {
+        var withBoth = IslandLayoutCalculator.Calculate(
+            IslandState.Expanded,
+            1920,
+            1080,
+            showPlayerColumn: true,
+            showHeadphonesColumn: true);
+        var headphonesOnly = IslandLayoutCalculator.Calculate(
+            IslandState.Expanded,
+            1920,
+            1080,
+            showHeadphonesColumn: true);
+        var narrowScreen = IslandLayoutCalculator.Calculate(
+            IslandState.Expanded,
+            1024,
+            768,
+            showPlayerColumn: true,
+            showHeadphonesColumn: true);
+
+        Assert.Equal(1062, withBoth.Width);
+        Assert.Equal(826, headphonesOnly.Width);
+        Assert.Equal(1000, narrowScreen.Width);
+    }
+
+    [Fact]
     public void CompactBarUsesContentWidth()
     {
         var narrow = IslandLayoutCalculator.Calculate(

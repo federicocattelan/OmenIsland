@@ -29,6 +29,14 @@ Bottom corners of the non-idle surface are rounded by clipping `RootHost`. Do no
 
 Compact width and expanded height use hysteresis so text and the spectrum do not jitter the island by a few pixels.
 
+The island always sits on the primary monitor (`Left` from `SystemParameters.WorkArea`, `Top` from the primary screen). `IslandWindow.Placement.cs` re-lays it out after display, DPI, work-area, unlock, resume, and explorer-restart events, and runs a 3 s watchdog in Idle. The watchdog checks that the window is visible, not cloaked, on the top edge (`IdlePlacement.FindProblem`), topmost, and hit-testable at the idle line. A covered line counts only after two ticks in a row, and never while a fullscreen app is in the foreground. On a problem it re-applies the state, re-asserts `HWND_TOPMOST` without activating, and forces a repaint. It logs what it found to `%LOCALAPPDATA%\OmenIsland\island.log` (capped at 256 KB). Read that log first when the island "disappears".
+
+## Tray
+
+`TrayIconService` opens `TrayMenuWindow` on right-click instead of a WinForms menu. It is styled like the settings window, with a gradient card, glass rows, and Fluent icons. The header shows the profile and fan mode. The items are Riavvia island, Impostazioni, Ventole Auto, and Esci. A small "Log diagnostico attivo" note at the bottom opens the log folder. Double-click still opens settings.
+
+Riavvia island (`App.RestartIsland`) logs the old window's placement to `island.log`, opens a new `IslandWindow` on the same view model, then closes the old one. Hardware, media, and headphones keep running. `IslandWindow` detaches its view-model handlers and timers on `Closed`, so keep any new subscription paired with an unsubscribe.
+
 ## Accent color
 
 The island shell follows the taskbar (black or light). Icons, sliders, and the compact spectrum use `IslandActiveBrush`.
@@ -46,6 +54,19 @@ There is no cover-art visualizer. `WaveformRibbon` and `ShowCoverVisualizer` wer
 ## Calendar
 
 Read-only Google Calendar in the expanded view. OAuth client data lives in `Services/Calendar/GoogleSignIn.Local.cs`, which is gitignored (template: `GoogleSignIn.Local.cs.example`). Without it the calendar stays disconnected. Do not print or commit the client secret. The signed-in account is the user's; do not invent a different one.
+
+## Headphones (CMF Headphone Pro)
+
+`CmfHeadphonesService` (App, `Services/Headphones`) speaks the Nothing control protocol over RFCOMM, service UUID `aeac4a03-dff5-498f-843a-34487cf133eb`. Frame `55 60 01 | cmd LE | len LE | seq | payload | CRC-16/MODBUS LE`; one request in flight at a time. Model is B175. Constants come from BudsLink / ear-web; do not copy their code (ear-web is AGPL).
+
+- Device is chosen in settings (CUFFIE) from paired Bluetooth devices: `HeadphoneDeviceId`, `HeadphoneDeviceName`, `HeadphoneAutoConnect`. The socket opens when Windows reports the device connected; retries 2/5/15 s.
+- Headphone image is the product photo split into `Assets/cmf-headphone-mask.png` (silhouette, filled with `IslandActiveBrush`) and `Assets/cmf-headphone-shade.png` (highlights/shadows on top), via `HeadphonesPhotoStyle`. It follows the accent like the rest of the island; do not swap it back to a vector icon or an untinted photo.
+- Compact: photo, battery %, thin bar, after the calendar. Expanded: fourth column (196 + 16 spacer): photo header with battery, noise control (Off/Trasparenza/ANC + level), then a `ShellRaisedBrush` card with EQ preset, spatial (Off/Concerto/Cinema), dual connection, LDAC, low latency (get `0xC041`, reply `0x4041`, set `0xF040`; payload `01 00` on, `02 00` off; codec is re-read after a change). Its `MinHeight` is bound to `PerformanceCell` so it ends on the same line. Only visible while connected; adds 212 to the expanded width.
+- The firmware resets low latency to off on every connection (also with the Nothing X app). The island does not re-send it; the switch shows what the device reports.
+- `HeadphoneTrafficLog` writes every frame except battery polls, and replies that time out, to `%LOCALAPPDATA%\OmenIsland\headphones.log` (256 KB cap). It stays on by choice.
+- The settings device picker uses `SettingsComboBoxStyle` (glass box, gradient popup); keep it in line with `SettingsButtonStyle`.
+- EQ on B175 uses the listening-mode commands (`0xC050`/`0xF01D`), not `0xF010`. Bytes: 0 Dirac Opteo (read only, not in the cycle), 1 Rock, 2 Electronic, 3 Pop, 4 Vocals (Voce), 5 Classical, 6 Custom. There is no Flat/Balanced preset on this model.
+- Custom EQ: get `0xC044`, reply `0x4044`, set `0xF041`. Three biquads in the order peak 980 Hz Q0.7 (mid), high shelf 3500 Hz Q1.0 (treble), low shelf 140 Hz Q0.8 (bass), whole dB in [-6, 6], little-endian floats; total gain is minus the loudest positive band. When Custom is selected, three vertical sliders (Bassi/Medi/Alti) appear under the EQ row; changes are sent 250 ms after the last move.
 
 ## Hardware
 

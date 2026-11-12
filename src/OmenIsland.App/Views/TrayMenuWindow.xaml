@@ -1,0 +1,161 @@
+<Window x:Class="OmenIsland.App.Views.TrayMenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Omen Island"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        SizeToContent="WidthAndHeight"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        Deactivated="Window_Deactivated"
+        PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <SolidColorBrush x:Key="TrayMutedBrush" Color="#E4EEFF" />
+        <Style x:Key="TrayItemStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource IslandTextBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Row"
+                                Background="Transparent"
+                                CornerRadius="7"
+                                Padding="10,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="26" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{TemplateBinding Tag}"
+                                           FontFamily="Segoe Fluent Icons"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TrayMutedBrush}" />
+                                <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="#26FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="#26FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="#3DFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="TrayNoteStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Note" Background="Transparent" CornerRadius="6" Padding="10,5">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Note" Property="Background" Value="#1AFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- The margin leaves room for the shadow inside the transparent window. -->
+    <Border x:Name="Card"
+            Margin="12"
+            Width="236"
+            BorderBrush="#66FFFFFF"
+            BorderThickness="1"
+            CornerRadius="12"
+            Opacity="0"
+            RenderTransformOrigin="1,1">
+        <Border.RenderTransform>
+            <TranslateTransform x:Name="CardOffset" Y="6" />
+        </Border.RenderTransform>
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#FF1849A9" Offset="0" />
+                <GradientStop Color="#FF3A2FBA" Offset="0.55" />
+                <GradientStop Color="#FF6C1FCC" Offset="1" />
+            </LinearGradientBrush>
+        </Border.Background>
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="18" ShadowDepth="4" Direction="270" Opacity="0.35" />
+        </Border.Effect>
+        <Grid>
+            <Border CornerRadius="11" IsHitTestVisible="False">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#26FFFFFF" Offset="0" />
+                        <GradientStop Color="#00FFFFFF" Offset="0.6" />
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            <StackPanel Margin="5">
+                <StackPanel Margin="10,8,10,8">
+                    <TextBlock Text="Omen Island"
+                               Foreground="{StaticResource IslandTextBrush}"
+                               FontSize="14"
+                               FontWeight="SemiBold" />
+                    <TextBlock x:Name="Subtitle"
+                               Foreground="{StaticResource TrayMutedBrush}"
+                               FontSize="11"
+                               Margin="0,2,0,0" />
+                </StackPanel>
+                <Border Height="1" Margin="8,0,8,4" Background="#33FFFFFF" />
+
+                <Button Style="{StaticResource TrayItemStyle}"
+                        Tag="&#xE72C;"
+                        Click="RestartIsland_Click"
+                        ToolTip="Ricrea solo la barra in alto. Hardware, musica e cuffie restano attivi.">
+                    Riavvia island
+                </Button>
+                <Button Style="{StaticResource TrayItemStyle}" Tag="&#xE713;" Click="Settings_Click">
+                    Impostazioni
+                </Button>
+                <Button Style="{StaticResource TrayItemStyle}" Tag="&#xEC4A;" Click="FansAuto_Click">
+                    Ventole Auto
+                </Button>
+
+                <Border Height="1" Margin="8,4" Background="#33FFFFFF" />
+                <Button Style="{StaticResource TrayItemStyle}" Tag="&#xE7E8;" Click="Exit_Click">
+                    Esci
+                </Button>
+
+                <Button Style="{StaticResource TrayNoteStyle}"
+                        Margin="0,4,0,2"
+                        Click="OpenLogs_Click"
+                        ToolTip="Isola e cuffie scrivono in %LOCALAPPDATA%\OmenIsland. Clic per aprire la cartella.">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="6"
+                                 Height="6"
+                                 Fill="#FF7CF2A6"
+                                 VerticalAlignment="Center" />
+                        <TextBlock Text="Log diagnostico attivo"
+                                   Margin="7,0,0,0"
+                                   FontSize="10.5"
+                                   Foreground="{StaticResource TrayMutedBrush}"
+                                   Opacity="0.8"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
