@@ -97,14 +97,13 @@ public partial class App : System.Windows.Application
         var modules = new ModuleRegistry();
         modules.Register(new HardwareFeatureModule(_viewModel));
 
-        _window = new IslandWindow(_viewModel);
-        _window.SettingsRequested += (_, _) => ShowSettings();
-        _window.Show();
+        _window = CreateIslandWindow(_viewModel);
 
         _trayIcon = new TrayIconService(
-            _window,
             _viewModel,
+            Dispatcher,
             ShowSettings,
+            RestartIsland,
             ExitAsync);
         SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
 
@@ -124,6 +123,44 @@ public partial class App : System.Windows.Application
                 "Omen Island — inizializzazione",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
+        }
+    }
+
+    private IslandWindow CreateIslandWindow(IslandViewModel viewModel)
+    {
+        var window = new IslandWindow(viewModel);
+        window.SettingsRequested += (_, _) => ShowSettings();
+        window.Show();
+        return window;
+    }
+
+    /// <summary>
+    /// Replaces the island window with a fresh one. Hardware, media and headphones keep running;
+    /// only the overlay is rebuilt, which recovers it if it stopped showing.
+    /// </summary>
+    public void RestartIsland()
+    {
+        if (_viewModel is null || _isExiting)
+        {
+            return;
+        }
+
+        var old = _window;
+        old?.LogPlacement("restart from tray");
+        _window = CreateIslandWindow(_viewModel);
+        if (old is null)
+        {
+            return;
+        }
+
+        try
+        {
+            old.PermitClose();
+            old.Close();
+        }
+        catch
+        {
+            // A broken old window must not stop the new one from showing.
         }
     }
 

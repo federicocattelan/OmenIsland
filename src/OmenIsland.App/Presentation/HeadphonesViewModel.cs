@@ -68,6 +68,9 @@ public sealed class HeadphonesViewModel : ObservableObject, IAsyncDisposable
         ToggleLdacCommand = new AsyncRelayCommand(
             () => _service.SetCodecAsync(IsLdac ? AudioCodec.Aac : AudioCodec.Ldac),
             () => IsConnected);
+        ToggleLowLatencyCommand = new AsyncRelayCommand(
+            () => _service.SetLowLatencyAsync(!IsLowLatency),
+            () => IsConnected);
         ConnectCommand = new AsyncRelayCommand(() => _service.ConnectAsync());
         DisconnectCommand = new AsyncRelayCommand(() => _service.DisconnectAsync());
     }
@@ -149,6 +152,8 @@ public sealed class HeadphonesViewModel : ObservableObject, IAsyncDisposable
 
     public bool IsLdac => _snapshot.Codec == AudioCodec.Ldac;
 
+    public bool IsLowLatency => _snapshot.LowLatency ?? false;
+
     public string StatusText => _snapshot.Link switch
     {
         HeadphoneLink.NotConfigured => "Nessuna cuffia selezionata.",
@@ -177,6 +182,8 @@ public sealed class HeadphonesViewModel : ObservableObject, IAsyncDisposable
     public ICommand ToggleDualCommand { get; }
 
     public ICommand ToggleLdacCommand { get; }
+
+    public ICommand ToggleLowLatencyCommand { get; }
 
     public ICommand ConnectCommand { get; }
 
@@ -273,6 +280,7 @@ public sealed class HeadphonesViewModel : ObservableObject, IAsyncDisposable
         OnPropertyChanged(nameof(DualConnection));
         OnPropertyChanged(nameof(SpatialLabel));
         OnPropertyChanged(nameof(IsLdac));
+        OnPropertyChanged(nameof(IsLowLatency));
         OnPropertyChanged(nameof(StatusText));
         if (wasConnected != IsConnected)
         {
@@ -280,7 +288,8 @@ public sealed class HeadphonesViewModel : ObservableObject, IAsyncDisposable
             foreach (var command in new[]
                      {
                          SetNoiseCommand, SelectAncCommand, NextEqCommand, PreviousEqCommand,
-                         NextSpatialCommand, PreviousSpatialCommand, ToggleDualCommand, ToggleLdacCommand
+                         NextSpatialCommand, PreviousSpatialCommand, ToggleDualCommand, ToggleLdacCommand,
+                         ToggleLowLatencyCommand
                      })
             {
                 switch (command)

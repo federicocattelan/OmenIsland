@@ -8,43 +8,26 @@ namespace OmenIsland.App.Services;
 
 public sealed class TrayIconService : IDisposable
 {
-    private readonly IslandWindow _window;
     private readonly IslandViewModel _viewModel;
     private readonly Action _showSettings;
+    private readonly Action _restartIsland;
     private readonly Func<Task> _exitAsync;
     private readonly Dispatcher _dispatcher;
     private readonly WinForms.NotifyIcon _notifyIcon;
+    private TrayMenuWindow? _menu;
 
     public TrayIconService(
-        IslandWindow window,
         IslandViewModel viewModel,
+        Dispatcher dispatcher,
         Action showSettings,
+        Action restartIsland,
         Func<Task> exitAsync)
     {
-        _window = window;
         _viewModel = viewModel;
+        _dispatcher = dispatcher;
         _showSettings = showSettings;
+        _restartIsland = restartIsland;
         _exitAsync = exitAsync;
-        _dispatcher = window.Dispatcher;
-
-        var menu = new WinForms.ContextMenuStrip();
-        menu.Items.Add(
-            "Impostazioni",
-            null,
-            (_, _) => _dispatcher.Invoke(_showSettings));
-        menu.Items.Add(
-            "Apri controlli",
-            null,
-            (_, _) => _dispatcher.Invoke(_window.Expand));
-        menu.Items.Add(
-            "Ventole Auto",
-            null,
-            async (_, _) => await RestoreAutomaticAsync());
-        menu.Items.Add(new WinForms.ToolStripSeparator());
-        menu.Items.Add(
-            "Esci",
-            null,
-            async (_, _) => await await _dispatcher.InvokeAsync(_exitAsync));
 
         var executable = Environment.ProcessPath;
         var icon = string.IsNullOrWhiteSpace(executable)
@@ -55,8 +38,14 @@ public sealed class TrayIconService : IDisposable
         {
             Icon = icon,
             Text = "Omen Island",
-            Visible = true,
-            ContextMenuStrip = menu
+            Visible = true
+        };
+        _notifyIcon.MouseUp += (_, args) =>
+        {
+            if (args.Button == WinForms.MouseButtons.Right)
+            {
+                _dispatcher.BeginInvoke(ShowMenu);
+            }
         };
         _notifyIcon.DoubleClick += (_, _) =>
             _dispatcher.Invoke(_showSettings);
@@ -64,13 +53,29 @@ public sealed class TrayIconService : IDisposable
 
     public void Dispose()
     {
+        _menu?.Close();
         _notifyIcon.Visible = false;
-        _notifyIcon.ContextMenuStrip?.Dispose();
         _notifyIcon.Dispose();
     }
 
-    private async Task RestoreAutomaticAsync()
+    private void ShowMenu()
     {
-        await await _dispatcher.InvokeAsync(_viewModel.RestoreAutomaticAsync);
+        _menu?.Close();
+        var subtitle = $"{_viewModel.ActiveProfileLabel} · Ventole {_viewModel.FanModeLabel}";
+        var menu = new TrayMenuWindow(
+            subtitle,
+            _restartIsland,
+            _showSettings,
+            _viewModel.RestoreAutomaticAsync,
+            _exitAsync);
+        menu.Closed += (_, _) =>
+        {
+            if (_menu == menu)
+            {
+                _menu = null;
+            }
+        };
+        _menu = menu;
+        menu.ShowAtCursor();
     }
 }

@@ -26,10 +26,11 @@ public sealed record HeadphoneSnapshot(
     CustomEq? CustomEq,
     bool? DualConnection,
     SpatialMode? Spatial,
-    AudioCodec? Codec)
+    AudioCodec? Codec,
+    bool? LowLatency)
 {
     public static HeadphoneSnapshot Empty { get; } =
-        new(HeadphoneLink.NotConfigured, "", "", null, null, null, null, null, null, null);
+        new(HeadphoneLink.NotConfigured, "", "", null, null, null, null, null, null, null, null);
 
     public bool IsConnected => Link == HeadphoneLink.Connected;
 }
@@ -197,6 +198,17 @@ public sealed class CmfHeadphonesService : IAsyncDisposable
     public Task SetCodecAsync(AudioCodec codec) =>
         SendAsync(NothingProtocol.CodecSet, NothingProtocol.CodecSetPayload(codec),
             current => current with { Codec = codec });
+
+    public async Task SetLowLatencyAsync(bool enabled)
+    {
+        await SendAsync(NothingProtocol.LowLatencySet, NothingProtocol.LowLatencySetPayload(enabled),
+            current => current with { LowLatency = enabled });
+        if (_session is { } session)
+        {
+            // The firmware may switch codec along with the latency mode.
+            await session.EnqueueAsync(NothingProtocol.CodecGet, []);
+        }
+    }
 
     public async ValueTask DisposeAsync()
     {
@@ -381,6 +393,7 @@ public sealed class CmfHeadphonesService : IAsyncDisposable
         await session.EnqueueAsync(NothingProtocol.DualConnectionGet, []);
         await session.EnqueueAsync(NothingProtocol.SpatialGet, []);
         await session.EnqueueAsync(NothingProtocol.CodecGet, []);
+        await session.EnqueueAsync(NothingProtocol.LowLatencyGet, []);
     }
 
     private void ScheduleRetry(int attempt)
@@ -509,6 +522,13 @@ public sealed class CmfHeadphonesService : IAsyncDisposable
                 }
 
                 break;
+            case NothingProtocol.LowLatencyReturn:
+                if (NothingProtocol.ParseLowLatency(payload) is { } lowLatency)
+                {
+                    Publish(current => current with { LowLatency = lowLatency });
+                }
+
+                break;
         }
     }
 
@@ -600,6 +620,7 @@ public sealed class CmfHeadphonesService : IAsyncDisposable
 
         public void Start()
         {
+            HeadphoneTrafficLog.Write("session start");
             _readTask = Task.Run(ReadLoopAsync);
             _writeTask = Task.Run(WriteLoopAsync);
             _batteryTask = Task.Run(BatteryLoopAsync);
@@ -655,6 +676,7 @@ public sealed class CmfHeadphonesService : IAsyncDisposable
                     _reader.Append(buffer);
                     while (_reader.TryRead(out var frame))
                     {
+                        HeadphoneTrafficLog.Frame("RX", frame.Command, frame.Sequence, frame.Payload);
                         if (_pending is { } pending && frame.Sequence == _pendingSequence)
                         {
                             pending.TrySetResult(true);
@@ -689,11 +711,17 @@ public sealed class CmfHeadphonesService : IAsyncDisposable
                     _pendingSequence = _sequence;
                     _pending = pending;
 
+                    HeadphoneTrafficLog.Frame("TX", command, _sequence, payload);
                     writer.WriteBytes(NothingProtocol.Encode(command, payload, _sequence));
                     await writer.StoreAsync().AsTask(_stop.Token);
 
                     // One request at a time: wait for the matching reply or move on.
                     await Task.WhenAny(pending.Task, Task.Delay(ResponseTimeout, _stop.Token));
+                    if (!pending.Task.IsCompleted)
+                    {
+                        HeadphoneTrafficLog.Write($"no reply to cmd=0x{command:X4} seq={_sequence}");
+                    }
+
                     _pending = null;
                 }
             }

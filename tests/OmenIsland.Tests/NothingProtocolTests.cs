@@ -99,6 +99,16 @@ public sealed class NothingProtocolTests
         Assert.Equal(AudioCodec.Aac, NothingProtocol.ParseCodec([0x00]));
     }
 
+    [Fact]
+    public void LowLatencyMapsToWireValues()
+    {
+        Assert.Equal(new byte[] { 0x01, 0x00 }, NothingProtocol.LowLatencySetPayload(true));
+        Assert.Equal(new byte[] { 0x02, 0x00 }, NothingProtocol.LowLatencySetPayload(false));
+        Assert.True(NothingProtocol.ParseLowLatency([0x01]));
+        Assert.False(NothingProtocol.ParseLowLatency([0x02]));
+        Assert.Null(NothingProtocol.ParseLowLatency([]));
+    }
+
     [Theory]
     [InlineData(EqPreset.Rock, 0x01)]
     [InlineData(EqPreset.Electronic, 0x02)]

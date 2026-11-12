@@ -1660,6 +1660,7 @@
                                         <RowDefinition Height="*" />
                                         <RowDefinition Height="*" />
                                         <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
                                 <Grid MinHeight="32">
                                     <Grid.ColumnDefinitions>
@@ -1785,6 +1786,19 @@
                                             Style="{StaticResource IslandToggleStyle}"
                                             Command="{Binding Headphones.ToggleLdacCommand}"
                                             Tag="{Binding Headphones.IsLdac}" />
+                                </Grid>
+                                <Grid Grid.Row="5" MinHeight="32">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Bassa latenza" Style="{StaticResource HeadphoneRowLabelStyle}" />
+                                    <Button Grid.Column="1"
+                                            Margin="0,0,4,0"
+                                            ToolTip="Modalità bassa latenza per giochi e video"
+                                            Style="{StaticResource IslandToggleStyle}"
+                                            Command="{Binding Headphones.ToggleLowLatencyCommand}"
+                                            Tag="{Binding Headphones.IsLowLatency}" />
                                 </Grid>
                                 </Grid>
                             </Border>

@@ -85,6 +85,10 @@ public static class NothingProtocol
     public const ushort CodecSet = 0xF01C;
     public const ushort CodecReturn = 0x4029;
 
+    public const ushort LowLatencyGet = 0xC041;
+    public const ushort LowLatencySet = 0xF040;
+    public const ushort LowLatencyReturn = 0x4041;
+
     public const int HeaderLength = 8;
     private const int CrcLength = 2;
     private const byte SingleBatteryId = 0x06;
@@ -287,6 +291,13 @@ public static class NothingProtocol
         payload.Length >= 1
             ? payload[0] == 0x02 ? AudioCodec.Ldac : AudioCodec.Aac
             : null;
+
+    /// <summary>Low-latency (gaming) mode: 0x01 on, 0x02 off.</summary>
+    public static byte[] LowLatencySetPayload(bool enabled) =>
+        [enabled ? (byte)0x01 : (byte)0x02, 0x00];
+
+    public static bool? ParseLowLatency(ReadOnlySpan<byte> payload) =>
+        payload.Length >= 1 ? payload[0] == 0x01 : null;
 }
 
 /// <summary>Reassembles frames from a byte stream that may split or join them.</summary>
